@@ -1,9 +1,7 @@
-import puppeteer from 'puppeteer'
 import { scrape } from './scrape'
 import { Database } from 'bun:sqlite'
 import Elysia from 'elysia'
 const db = new Database('bun.sqlite')
-
 new Elysia()
 .onStart(async () => {
     db.exec(`DROP TABLE prices`)

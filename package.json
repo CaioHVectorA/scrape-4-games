@@ -3,6 +3,7 @@
   "module": "index.ts",
   "type": "module",
   "devDependencies": {
+    "@flydotio/dockerfile": "^0.5.8",
     "@types/bun": "latest"
   },
   "peerDependencies": {
@@ -10,6 +11,7 @@
   },
   "dependencies": {
     "elysia": "^1.1.4",
-    "puppeteer": "^22.14.0"
+    "puppeteer": "^22.14.0",
+    "puppeteer-chromium-resolver": "^22.0.0"
   }
 }

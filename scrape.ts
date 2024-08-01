@@ -1,5 +1,8 @@
-import puppeteer from 'puppeteer';
+import puppeteer, { executablePath } from 'puppeteer';
 import { Database } from 'bun:sqlite'
+//@ts-ignore
+import PCR from 'puppeteer-chromium-resolver'
+const stats = await PCR()
 const db = new Database('bun.sqlite')
 //@ts-ignore
 const runPromisesInSeries = (ps: (() => Promise<any>)[]) => ps.reduce((p, next) => p.then(next), Promise.resolve());
@@ -8,7 +11,11 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export const scrape = async () => {
     console.log('Scrapping data!')
     // Launch the browser and open a new blank page
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await stats.puppeteer.launch({
+        headless: true,
+        executablePath: stats.executablePath,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
     const page = await browser.newPage();
     // Navigate the page to a URL.
     await page.goto('https://mkgames2.lojavirtualnuvem.com.br/playstation-4/');
@@ -26,9 +33,9 @@ export const scrape = async () => {
     const data = await page.$$('[data-product-id] .item .p-relative .item-info-container .item-info a')
     const prices = []
     for (const item of data) {
-        const percentage = Number((await item.$eval('.js-offer-percentage', el => el.textContent))?.replace(/\s/g, ''))
-        const price = Number((await item.$eval('.js-price-display', el => el.textContent))?.replace(/\s/g, '').replace('R$', '').replace(',', '.').trim())
-        const title = await item.$eval('.js-item-name', el => el.textContent)
+        const percentage = Number((await item.$eval('.js-offer-percentage', (el: Element) => el.textContent))?.replace(/\s/g, ''))
+        const price = Number((await item.$eval('.js-price-display', (el: Element) => el.textContent))?.replace(/\s/g, '').replace('R$', '').replace(',', '.').trim())
+        const title = await item.$eval('.js-item-name', (el: Element) => el.textContent)
         const index = data.indexOf(item)
         prices.push({ percentage, price, title, index })
     }
@@ -47,7 +54,7 @@ export const scrape = async () => {
             db.prepare('INSERT INTO prices (title, price, percentage, position) VALUES (?, ?, ?, ?)').run(title, price, percentage, index)
         } else {
             db.prepare('UPDATE prices SET price = ?, percentage = ?, position = ? WHERE title = ?').run(price, percentage, index, title)
-        } 
+        }
     })
 }
 if (process.argv[2] == 'scrape') {
