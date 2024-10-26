@@ -1,10 +1,10 @@
-import { scrape } from './scrape'
+import { scrape } from './src/scrappers/shopmk'
 import { Database } from 'bun:sqlite'
 import Elysia from 'elysia'
 const db = new Database('bun.sqlite')
 new Elysia()
 .onStart(async () => {
-    db.exec(`DROP TABLE prices`)
+    // db.exec(`DROP TABLE prices`)
     db.exec('CREATE TABLE IF NOT EXISTS prices (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, price REAL, percentage REAL, position INTEGER)')
     await scrape()
 })

@@ -43,7 +43,6 @@ export const scrape = async () => {
     const filteredPrices = prices.filter(({ percentage, price }) => (percentage > 40 || price < 60)).sort((a, b) => {
         const sum_scales_a = ((a.percentage / 100)) * a.price - ((-Math.floor(data.length / 12) + Math.floor(a.index / 12)) * 1.5)
         const sum_scales_b = ((b.percentage / 100)) * b.price - ((-Math.floor(data.length / 12) + Math.floor(b.index / 12)) * 1.5)
-        console.log({ sum_scales_a, sum_scales_b }, a.title, b.title)
         return sum_scales_b - sum_scales_a
     })
 
@@ -56,7 +55,28 @@ export const scrape = async () => {
             db.prepare('UPDATE prices SET price = ?, percentage = ?, position = ? WHERE title = ?').run(price, percentage, index, title)
         }
     })
+    console.log("Data scrapped!")
+    return filteredPrices
 }
 if (process.argv[2] == 'scrape') {
-    console.log(scrape())
+    const data = await scrape()
+    console.log(data)
+    if (process.argv[3] == 'save') {
+        db.exec('CREATE TABLE IF NOT EXISTS prices (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, price REAL, percentage REAL, position INTEGER)')
+        data.forEach(({ title, price, percentage, index }) => {
+            const itemExists = db.prepare('SELECT * FROM prices WHERE title = ?').get(title)
+            if (!itemExists) {
+                db.prepare('INSERT INTO prices (title, price, percentage, position) VALUES (?, ?, ?, ?)').run(title, price, percentage, index)
+            } else {
+                db.prepare('UPDATE prices SET price = ?, percentage = ?, position = ? WHERE title = ?').run(price, percentage, index, title)
+            }
+        })
+    }
+    if (process.argv[3] == 'infile') {
+        const fs = require('fs')
+        fs.writeFileSync('prices.json', JSON.stringify(data))
+    }
+    if (!process.argv[3]) {
+        console.log('No action specified')
+    }
 }
