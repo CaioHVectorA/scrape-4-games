@@ -10,6 +10,8 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@elysiajs/cors": "^1.4.2",
+    "@elysiajs/static": "^1.4.10",
     "elysia": "^1.1.4",
     "puppeteer": "^22.14.0",
     "puppeteer-chromium-resolver": "^22.0.0"
